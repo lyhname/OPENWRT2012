@@ -2,8 +2,7 @@
 
 ln -sf /sbin/ip /usr/bin/ip
 
-sed -i '/openwrt_\(packages\|base\|custom\)/d' /etc/opkg/customfeeds.conf
-sed -i '/openwrt_\(packages2\|base2\|custom\)/d' /etc/opkg/distfeeds.conf
+sed -i '/openwrt_custom/d' /etc/opkg/distfeeds.conf
 sed -i 's/downloads.openwrt.org/op.supes.top/g' /etc/opkg/distfeeds.conf
 
 grep -q log-facility /etc/dnsmasq.conf ||
@@ -19,6 +18,9 @@ sed -i '/S99opkg/d' /etc/crontabs/root
 echo "0 4 * * * sh /etc/rc.d/S99opkg >/tmp/opkgupdate.log 2>&1" >> /etc/crontabs/root
 
 uci set system.@rngd[0].enabled="1"
+uci del system.ntp.server
+uci add_list system.ntp.server='ntp.aliyun.com'
+uci add_list system.ntp.server='0.openwrt.pool.ntp.org'
 uci commit system
 
 uci set uhttpd.main.rfc1918_filter=0
@@ -28,7 +30,7 @@ uci set uhttpd.main.max_requests='100'
 uci commit uhttpd
 
 echo $(uci get uhttpd.main.index_page) | grep -q "cgi-bin/luci" ||
-	uci -q add_list uhttpd.main.index_page='cgi-bin/luci' && commit uhttpd
+	uci -q add_list uhttpd.main.index_page='cgi-bin/luci' && uci commit uhttpd
 
 if [ ! -f /etc/config/placeholder ]; then
 
